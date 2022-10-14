@@ -2,7 +2,7 @@ const Manager = require('./lib/Manager');
 const Engineer = require('./lib/Engineer');
 const Intern = require('./lib/Intern');
 const inquirer = require('inquirer');
-const {startFile, generateManagerProfile, generateEngineerProfile, generateInternProfile, finishFile} = require('./src/generateTeamProfile');
+//const {startFile, generateManagerProfile, generateEngineerProfile, generateInternProfile, finishFile} = require('./src/generateTeamProfile');
 
 const managers = [];
 const engineers = [];
@@ -24,7 +24,7 @@ function init() {
     })
     .then((answers) => {
         if(answers.continue) {
-            console.log('=============================================================\n')
+            getLineBreak();
             getManagerInformation();
         } else {
             console.clear();
@@ -34,7 +34,7 @@ function init() {
 }
 
 function getManagerInformation() {
-    startFile();
+    //startFile();
 
     const managerQs = getQuestions("Manager",[{
         type: 'input',
@@ -43,28 +43,33 @@ function getManagerInformation() {
     }]);
     
     inquirer.prompt(managerQs)
-    .then((answers) => {
+    .then(async ({name, id, email, officeNum, runAgain}) => {
 
-        managers.push(answers);
+        const newManager = new Manager(name,id,email,officeNum)
 
-        if(answers.continue) {
+        managers.push(newManager);
+
+        if(runAgain) {
 
             getManagerInformation();
         } else {
 
             //*generateManagerProfile(managers);
-            const wantEngineer = wantNextRole('Engineer');
+            const wantEngineer = await wantNextRole('Engineer');
 
             if(wantEngineer) {
-                getEngineerInforamtion();
+                getLineBreak();
+                getEngineerInformation();
             } else {
 
-                const wantIntern = wantNextRole('Intern');
+                const wantIntern = await wantNextRole('Intern');
 
                 if(wantIntern) {
+                    getLineBreak();
                     getInternInformation();
                 } else {
-                    finishFile();
+                    getLineBreak();
+                    //finishFile();
                 }
             }
         }
@@ -72,7 +77,71 @@ function getManagerInformation() {
     .catch(console.error);
 }
 
-function getQuestions(position, objArr) {
+function getEngineerInformation() {
+
+    const engineerQs = getQuestions("Engineer",[{
+        type: 'input',
+        name: 'github',
+        message: `Please enter the Engineers GitHub username:`
+    }, {
+        type: 'input',
+        name: 'hubUrl',
+        message: `Please enter the Engineers GitHub profile url:`
+    }]);
+    
+    inquirer.prompt(engineerQs)
+    .then(async ({name, id, email, github, hubUrl, runAgain}) => {
+
+        const newEngineer = new Engineer(name, id, email, github, hubUrl);
+
+        engineers.push(newEngineer);
+
+        if(runAgain) {
+
+            getEngineerInformation();
+        } else {
+
+            //*generateEngineerProfile(engineers);
+            const wantIntern =  await wantNextRole('Intern');
+
+            if(wantIntern) {
+                getLineBreak();
+                getInternInformation();
+            } else {
+                getLineBreak();
+                //finishFile();
+            }
+        }
+    })
+    .catch(console.error);
+}
+
+function getInternInformation() {
+
+    const internQs = getQuestions("Intern",[{
+        type: 'input',
+        name: 'school',
+        message: `Please enter the school your Intern attends:`
+    }]);
+    
+    inquirer.prompt(internQs)
+    .then(({name, id, email, school, runAgain}) => {
+
+        const newIntern = new Intern(name, id, email, school);
+
+        interns.push(newIntern);
+
+        if(runAgain) {
+            getInternInformation();
+        } else {
+            getLineBreak();
+            //*generateInternProfile(interns);
+        }
+    })
+    .catch(console.error);
+}
+
+function getQuestions(position, promptArr) {
 
     const questions = [{
         type: 'input',
@@ -88,38 +157,37 @@ function getQuestions(position, objArr) {
         message: `Please enter the ${position}'s email:`
     }]
 
-    objArr.forEach((obj) => {questions.push(obj)});
-    questions.push(getRepeatQ(position));
+    promptArr.forEach((prompt) => {questions.push(prompt)});
+    questions.push({
+        type: 'confirm',
+        name: 'runAgain',
+        message: `Would you like to add another ${position}?`,
+    });
 
     return questions;
-}
-
-function getRepeatQ(position) {
-
-    const repeatPrompt = {
-        type: 'confirm',
-        name: 'continue',
-        message: `Would you like to add another ${position}?`,
-    }
-
-    return repeatPrompt;
 }
 
 function wantNextRole(position) {
 
     const rolePrompt = inquirer.createPromptModule();
-            rolePrompt({
-                type: 'confirm',
-                name: 'continue',
-                message: `Would you like to generate a profile for an ${position}?`
-            })
-            .then((answers) => {
-                if(answers.continue) {
-                    return true
-                } else {
-                    return false
-                }
-            });
+    return new Promise((resolve) => { 
+        rolePrompt({
+        type: 'confirm',
+        name: 'wantNext',
+        message: `Would you like to generate a profile for an ${position}?`
+        })
+        .then((answers) => {
+            if(answers.wantNext) {
+                resolve(true);
+            } else {
+                resolve(false);
+            }
+        })
+    });
+}
+
+function getLineBreak() {
+    console.log('=============================================================\n');
 }
 
 init();
