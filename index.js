@@ -2,7 +2,7 @@ const Manager = require('./lib/Manager');
 const Engineer = require('./lib/Engineer');
 const Intern = require('./lib/Intern');
 const inquirer = require('inquirer');
-//const {startFile, generateManagerProfile, generateEngineerProfile, generateInternProfile, finishFile} = require('./src/generateTeamProfile');
+const {startFile, generateManagerProfile, generateEngineerProfile, generateInternProfile, finishFile} = require('./src/generateTeamProfile');
 
 const managers = [];
 const engineers = [];
@@ -24,6 +24,7 @@ function init() {
     })
     .then((answers) => {
         if(answers.continue) {
+            startFile();
             getLineBreak();
             getManagerInformation();
         } else {
@@ -34,7 +35,6 @@ function init() {
 }
 
 function getManagerInformation() {
-    //startFile();
 
     const managerQs = getQuestions("Manager",[{
         type: 'input',
@@ -50,11 +50,11 @@ function getManagerInformation() {
         managers.push(newManager);
 
         if(runAgain) {
-
+            console.log();
             getManagerInformation();
         } else {
 
-            //*generateManagerProfile(managers);
+            generateManagerProfile(managers);
             const wantEngineer = await wantNextRole('Engineer');
 
             if(wantEngineer) {
@@ -69,7 +69,7 @@ function getManagerInformation() {
                     getInternInformation();
                 } else {
                     getLineBreak();
-                    //finishFile();
+                    finishFile();
                 }
             }
         }
@@ -97,11 +97,11 @@ function getEngineerInformation() {
         engineers.push(newEngineer);
 
         if(runAgain) {
-
+            console.log();
             getEngineerInformation();
         } else {
 
-            //*generateEngineerProfile(engineers);
+            generateEngineerProfile(engineers);
             const wantIntern =  await wantNextRole('Intern');
 
             if(wantIntern) {
@@ -109,7 +109,7 @@ function getEngineerInformation() {
                 getInternInformation();
             } else {
                 getLineBreak();
-                //finishFile();
+                finishFile();
             }
         }
     })
@@ -132,10 +132,12 @@ function getInternInformation() {
         interns.push(newIntern);
 
         if(runAgain) {
+            console.log();
             getInternInformation();
         } else {
             getLineBreak();
-            //*generateInternProfile(interns);
+            generateInternProfile(interns);
+            finishFile();
         }
     })
     .catch(console.error);
